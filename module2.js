@@ -140,8 +140,88 @@ function check_wpt( entTxt ){
 	return [ Htxt, Wtxt,  Ttxt ];
 }
 
+
+// KML→GPX変換
+function kml_inport( txtStr, routeName  ){
+	let Folder = [], routeTxt = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx>\n', trkTxt = "", wptTxt = "";;
+	if ( txtStr.indexOf( "<Folder>" ) != -1 ){ // Folder(トラック)配列作成(txtStr:<Folder>で分割)
+		Folder = txtStr.split( "<Folder>" ); 
+		Folder.shift();
+	}else{
+		Folder = [txtStr];
+	}
+	for ( let i = 0; i < Folder.length ; i++ ){
+		let PT = 0, PlaceM = [], wptArr = [], trkptArr = [], trkName = "";
+		while( PT != -1 ){ // Placemarkの配列作成( PlaceM:<Placemark>で分割)
+			PT = Folder[ i ].indexOf( "<Placemark>", PT );
+			if ( PT != -1 ){
+				PlaceM.push( Folder[ i ].substring( PT, Folder[ i ].indexOf( "</Placemark>", PT ) ) );
+				PT++;
+			}
+		}
+		for ( let j = 0; j < PlaceM.length; j++ ){
+			let codtxt = "";
+			if ( PlaceM[ j ].indexOf( "<Point>" ) != -1 ){ // wptArr配列
+				codtxt = PlaceM[ j ].substring( PlaceM[ j ].indexOf( "<coordinates>" ) + 13, PlaceM[ j ].indexOf( "</coordinates>" ) );
+				let LonLatEle = codtxt.split(",");
+				if ( LonLatEle.length < 3 ){ LonLatEle[2] = "0"; }
+				let Lon = Number( LonLatEle[0] ), Lat = Number( LonLatEle[1] ), Ele = Number( LonLatEle[2] );
+ 				let wptNam= PlaceM[ j ].substring( PlaceM[ j ].indexOf("<name>") + 6,  PlaceM[ j ].indexOf( "</name>" ) );
+				let flg = 0; // wpt重複防止
+				for (let k = 0; k < wptArr.length; k++){ if (wptArr[ k ][0] === Lon && wptArr[ k ][1] === Lat ){ flg = 1 } }
+				if ( flg === 0 ){ wptArr.push( [Lon, Lat, Ele, wptNam ] ); }
+			}
+			if ( PlaceM[ j ].indexOf( "<LineString>" ) != -1 ){ // trkptArr配列
+				trkName = PlaceM[ j ].substring( PlaceM[ j ].indexOf("<name>") + 6,  PlaceM[ j ].indexOf( "</name>" ) );
+				codtxt = PlaceM[ j ].substring( PlaceM[ j ].indexOf( "<coordinates>" ) + 13, PlaceM[ j ].indexOf( "</coordinates>" ) );
+				codtxt = codtxt.replace( /\n/g, " ");
+				let ArrTmp = codtxt.split(" "), codArr =[];
+				for ( let k = 0; k < ArrTmp.length; k++ ){ // trkpt毎の配列作成(codArr)
+					let LonLatEle = ArrTmp[ k ].split(",");
+					if (LonLatEle.length > 1 ){ 
+						if ( LonLatEle.length < 3 ){ LonLatEle[2] = 0; }
+						trkptArr.push( [ Number(LonLatEle[0]), Number(LonLatEle[1]), Number(LonLatEle[2]) ] ); 
+					}
+				}
+			}
+		}
+		for ( let j = 0; j < wptArr.length; j++ ){ // wptがtrkptArrに無ければ直近trkptに追加
+			let MinIdx = 0, d1 = 800;
+			for ( let k = 0; k < trkptArr.length; k++ ){
+				let d2 = Math.abs( wptArr[ j ][0] - trkptArr[ k ][0] ) ** 2 + Math.abs( wptArr[ j ][1] - trkptArr[ k ][1]  ) ** 2;
+				if ( d2 === 0 ){ break; }
+				if (d1 > d2 ){ MinIdx = k; d1 = d2; }
+			}
+			if ( d1 != 0 ){
+				if ( MinIdx === 0 ){ 
+					trkptArr.unshift( wptArr[ j ] ); 
+				}else if ( MinIdx === trkptArr.length -1 ){
+					 trkptArr.push( wptArr[ j ] ); 
+				}else{
+					let d3 = Math.abs( wptArr[ j ][0] - trkptArr[ MinIdx -1 ][0] ) ** 2 + Math.abs( wptArr[ j ][1] - trkptArr[ MinIdx -1 ][1]  ) ** 2;
+					let d4 = Math.abs( wptArr[ j ][0] - trkptArr[ MinIdx +1 ][0] ) ** 2 + Math.abs( wptArr[ j ][1] - trkptArr[ MinIdx +1 ][1]  ) ** 2;
+					( d3 >= d4 ) ? trkptArr.splice( MinIdx -1, 0, wptArr[ j ] ): trkptArr.splice( MinIdx +1, 0, wptArr[ j ] ); 
+				}
+			}
+		}
+		for ( let j = 0; j < wptArr.length; j++ ){
+			wptTxt += `<wpt lat="${wptArr[ j ][1]}" lon="${wptArr[ j ][0]}" >\n<name>${wptArr[ j ][3]}</name>\n`
+			wptTxt += `<<cmt></cmt>\n<desc></desc>\n</wpt>\n`;
+		}
+		trkTxt += `<trk><name>${trkName}</name><trkseg>\n`;
+		for ( let j = 0; j < trkptArr.length; j++ ){
+			trkTxt += `<trkpt lat="${trkptArr[ j ][1]}" lon="${trkptArr[ j ][0]}">`;
+			trkTxt += `<ele>${trkptArr[ j ][1]}</ele></trkpt>\n`
+		}
+		trkTxt += "</trkseg></trk>\n";
+	}
+	routeTxt += wptTxt + trkTxt + "</gpx>\n";
+	make_RouteList( routeTxt, routeName );
+}
+
+
 // KML→GPX変換、ルート登録
-function kml_inport( txtStr, routeName ){
+function kml_inportPre( txtStr, routeName ){
 	let  routeTxt = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx>\n', wptArr = [], trkTxt = "", trkSpl = [];
 	if ( txtStr.indexOf( "<Folder>" ) != -1 ){
 		trkSpl = txtStr.split( "<Folder>" ); 
