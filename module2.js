@@ -190,7 +190,7 @@ function kml_inport( txtStr, routeName  ){
 			for ( let k = 0; k < trkptArr.length; k++ ){
 				let d2 = Math.abs( wptArr[ j ][0] - trkptArr[ k ][0] ) ** 2 + Math.abs( wptArr[ j ][1] - trkptArr[ k ][1]  ) ** 2;
 				if ( d2 === 0 ){ MinIdx = k; break; }
-				if (d1 > d2 ){ MinIdx = k; d1 = d2; }
+				if ( d1 > d2 ){ MinIdx = k; d1 = d2; }
 			}
 			if ( d1 != 0 ){
 				if ( MinIdx === 0 ){ 
@@ -218,7 +218,6 @@ function kml_inport( txtStr, routeName  ){
 	routeTxt += wptTxt + trkTxt + "</gpx>\n";
 	make_RouteList( routeTxt, routeName );
 }
-
 
 // /////////////////////////   地図操作   //////////////////////// 
 
