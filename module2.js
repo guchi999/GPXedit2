@@ -143,7 +143,7 @@ function check_wpt( entTxt ){
 
 // KML→GPX変換
 function kml_inport( txtStr, routeName  ){
-	let Folder = [], routeTxt = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx>\n', trkTxt = "", wptTxt = "";;
+	let Folder = [], routeTxt = HeaderTxt, trkTxt = "", wptTxt = "";;
 	if ( txtStr.indexOf( "<Folder>" ) != -1 ){ // Folder(トラック)配列作成(txtStr:<Folder>で分割)
 		Folder = txtStr.split( "<Folder>" ); 
 		Folder.shift();
