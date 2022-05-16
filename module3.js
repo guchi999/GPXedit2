@@ -45,7 +45,7 @@ function savelog(){
 	let routeId = Object.keys(ChoseRoute)[0];
 	writeFilNam = GetDoc("trk1");
 // kml 出力モード選択を追加する場所
-	( Bttn1Value() === "0" ) ?  // gpx出力作成
+	( Bttn1Value() === "0" || Bttn1Value() === "2" ) ?  // gpx出力作成
 		writeTex = make_GPXtxt(routeId):
 		writeTex = make_GPXtxtSimple(routeId);
 	let title = writeFilNam + ".gpx"; // 出力ファイル名
@@ -64,7 +64,8 @@ function savelog(){
 
 // 元ファイル形式gpx txt作成
 function make_GPXtxt(routeId){
-	let WriteTxt = Header[routeId][0] + Header[routeId][1];
+	let WriteTxt = Header[routeId][0];
+	if ( Bttn1Value() === "0" ){ WriteTxt += Header[routeId][1]; }
 	for (let i = 0; i < RouteList[routeId][1]; i++ ){ 
 		WriteTxt += Track[routeId][ i ] + TrksegTxt[routeId][ i ]+ Header[routeId][2];
 	}
@@ -73,7 +74,8 @@ function make_GPXtxt(routeId){
 }
 // 最小サイズgpx txt作成
 function make_GPXtxtSimple(routeId){
-	let WriteTxt = Header[routeId][0] + Header[routeId][1];
+	let WriteTxt = Header[routeId][0];
+	if ( Bttn1Value() === "1" ){ WriteTxt += Header[routeId][1]; }
 	for (let i = 0; i < RouteList[routeId][1]; i++ ){ 
 		WriteTxt += Track[routeId][ i ] + rmvAddInfo( TrksegTxt[routeId][ i ] ) + Header[routeId][2];
 	}
@@ -85,11 +87,12 @@ function rmvAddInfo( trkseg ){
 	let PT = 0, trkpt = "", ele = "", time ="", trksegTmp = "";
 	while( PT != -1 ){
 		let trkpDat = get_trkptDat( trkseg, PT );
+		 ele = ""; time ="",
 		PT =  trkpDat[0];
 		if ( PT != -1 ){
 			trkpt = trkpDat[5].substring( 0, trkpDat[5].indexOf( ">" ) + 1 );
-			if ( trkpDat[5].indexOf( "<ele>" != -1 ) ){ ele = trkpDat[5].substring( trkpDat[5].indexOf( "<ele>" ),  trkpDat[5].indexOf( "</ele>" ) + 6 ); }
-			if ( trkpDat[5].indexOf( "<time>" != -1 ) ){ time = trkpDat[5].substring( trkpDat[5].indexOf( "<time>" ),  trkpDat[5].indexOf( "</time>" ) + 7 ); }
+			if ( trkpDat[5].indexOf( "<ele>" ) != -1 ){ ele = trkpDat[5].substring( trkpDat[5].indexOf( "<ele>" ),  trkpDat[5].indexOf( "</ele>" ) + 6 ); }
+			if ( trkpDat[5].indexOf( "<time>" ) != -1 ){ time = trkpDat[5].substring( trkpDat[5].indexOf( "<time>" ),  trkpDat[5].indexOf( "</time>" ) + 7 ); }
 			trksegTmp += trkpt + ele + time + trkpDat[5].substring( trkpDat[5].indexOf( "</trkpt>" ) );
 			PT++;
 		}
