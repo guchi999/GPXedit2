@@ -189,7 +189,7 @@ function kml_inport( txtStr, routeName  ){
 			let MinIdx = 0, d1 = 800;
 			for ( let k = 0; k < trkptArr.length; k++ ){
 				let d2 = Math.abs( wptArr[ j ][0] - trkptArr[ k ][0] ) ** 2 + Math.abs( wptArr[ j ][1] - trkptArr[ k ][1]  ) ** 2;
-				if ( d2 === 0 ){ break; }
+				if ( d2 === 0 ){ MinIdx = k; break; }
 				if (d1 > d2 ){ MinIdx = k; d1 = d2; }
 			}
 			if ( d1 != 0 ){
@@ -219,70 +219,6 @@ function kml_inport( txtStr, routeName  ){
 	make_RouteList( routeTxt, routeName );
 }
 
-
-// KML→GPX変換、ルート登録
-function kml_inportPre( txtStr, routeName ){
-	let  routeTxt = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx>\n', wptArr = [], trkTxt = "", trkSpl = [];
-	if ( txtStr.indexOf( "<Folder>" ) != -1 ){
-		trkSpl = txtStr.split( "<Folder>" ); 
-		trkSpl.shift();
-	}else{
-		trkSpl = [txtStr];
-	}
-	for ( let i = 0; i < trkSpl.length ; i++ ){
-		let PT = 0, PlaceM = [];
-		while( PT != -1 ){
-			PT = trkSpl[ i ].indexOf( "<Placemark>", PT );
-			if ( PT != -1 ){
-				PlaceM.push( trkSpl[ i ].substring( PT, trkSpl[ i ].indexOf( "</Placemark>", PT ) ) );
-				PT++;
-			}
-		}
-		let codtxt = "", wptTxt = ""; SGdat = [];
-		for ( let j = 0; j < PlaceM.length; j++ ){
-			if ( PlaceM[ j ].indexOf( "<Point>" ) != -1 ){
-				wptTxt = "";
-				codtxt = PlaceM[ j ].substring( PlaceM[ j ].indexOf( "<coordinates>" ) + 13, PlaceM[ j ].indexOf( "</coordinates>" ) );
-				let LonLatEle = codtxt.split(",");
-				let Lon = Number( LonLatEle[0] ), Lat = Number( LonLatEle[1] ), Ele = Number( LonLatEle[2] );
-				wptTxt += `<wpt lat="${Lat}" lon="${Lon}" >\n`;
-				wptTxt +=  PlaceM[ j ].substring( PlaceM[ j ].indexOf("<name>"),  PlaceM[ j ].indexOf( "</name>" ) + 7 );
-				wptTxt += "\n<cmt></cmt>\n<desc></desc>\n</wpt>\n";
-				let flg = 0; // wpt重複防止
-				for (let k = 0; k < wptArr.length; k++){ if (wptArr[ k ] === wptTxt ){ flg = 1 } }
-				if ( flg === 0 ){ wptArr.push( wptTxt ); }
-				SGdat.push( Lon +","+ Lat );
-			}
-		}
-		for ( let j = 0; j < PlaceM.length; j++ ){
-			if ( PlaceM[ j ].indexOf( "<LineString>" ) != -1 ){
-				trkTxt += "<trk>" + PlaceM[ j ].substring( PlaceM[ j ].indexOf("<name>"),  PlaceM[ j ].indexOf( "</name>" ) + 7 ) +"<trkseg>\n";
-				codtxt = PlaceM[ j ].substring( PlaceM[ j ].indexOf( "<coordinates>" ) + 13, PlaceM[ j ].indexOf( "</coordinates>" ) );
-				codtxt = codtxt.replace( /\n/g, " ");
-				let ArrTmp = codtxt.split(" "), codArr =[];
-				if ( SGdat.length != 0 ){ 
-					if (  codtxt.indexOf( SGdat[0] ) === -1  ){ ArrTmp.unshift( SGdat[0] ); }
-					if (  codtxt.indexOf( SGdat[1] ) === -1  ){ ArrTmp.push( SGdat[1] ); }
-				 }
-				for ( let k = 0; k < ArrTmp.length; k++ ){
-					if (ArrTmp[ k ].split(",").length > 1 ){ codArr.push( ArrTmp[ k ] ); }
-				}
-				for ( let k = 0; k < codArr.length; k++ ){
-					let trkpt = codArr[ k ].split(",");
-					trkTxt += `<trkpt lat="${Number(trkpt[1])}" lon="${Number(trkpt[0])}">`;
-					( trkpt.length === 3 ) ? trkTxt +=`<ele>${Number(trkpt[2])}</ele></trkpt>\n`: trkTxt +=`<ele></ele></trkpt>\n`;
-				}
-				trkTxt += `</trkseg>\n</trk>\n`;
-			}
-		}
-	}
-	wptTxt = "";
-	for (let i = 0; i < wptArr.length; i++ ){
-		wptTxt += wptArr[ i ];
-	}
-	routeTxt += wptTxt + trkTxt + "</gpx>\n";
-	make_RouteList( routeTxt, routeName );
-}
 
 // /////////////////////////   地図操作   //////////////////////// 
 
