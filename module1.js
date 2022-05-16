@@ -297,7 +297,7 @@ function modeChange(){
 			break;
 		case "save":
 			addInputForm("OParea1", "trk1", "保存するファイル名：", "" );
-			addRadioForm( "OParea2", 0, "selbttn2" , [ "元ファイル形式で保存", "最小サイズで保存" ]);
+			addRadioForm( "OParea2", 0, "selbttn2" , [ "元ファイル形式", "最小サイズ",  "wpt無し元ファイル形式", "wpt無し最小サイズ"]);
 			addSaveLink("OParea3");
 			break;
 		case "Pinfo":
