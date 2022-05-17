@@ -42,12 +42,12 @@ function delete_route( routeId ){
 // "save" ファイル出力
 function savelog(){
 	if ( Object.keys(ChoseRoute).length === 0 ){ return; }
-	let routeId = Object.keys(ChoseRoute)[0];
+	let routeId = Object.keys(ChoseRoute)[0], formSel = Bttn1Value();
 	writeFilNam = GetDoc("trk1");
 // kml 出力モード選択を追加する場所
-	( Bttn1Value() === "0" || Bttn1Value() === "2" ) ?  // gpx出力作成
-		writeTex = make_GPXtxt(routeId):
-		writeTex = make_GPXtxtSimple(routeId);
+	( formSel === "0" || formSel === "2" ) ?  // gpx出力作成
+		writeTex = make_GPXtxt(routeId, formSel ):
+		writeTex = make_GPXtxtSimple(routeId, formSel);
 	let title = writeFilNam + ".gpx"; // 出力ファイル名
 	let linkTag = document.getElementById( "saveLocal" );
 	let linkTagAttr =  ["href","download"];
@@ -63,9 +63,9 @@ function savelog(){
 }
 
 // 元ファイル形式gpx txt作成
-function make_GPXtxt(routeId){
+function make_GPXtxt( routeId, formSel = "0" ){
 	let WriteTxt = Header[routeId][0];
-	if ( Bttn1Value() === "0" ){ WriteTxt += Header[routeId][1]; }
+	if ( formSel === "0" ){ WriteTxt += Header[routeId][1]; }
 	for (let i = 0; i < RouteList[routeId][1]; i++ ){ 
 		WriteTxt += Track[routeId][ i ] + TrksegTxt[routeId][ i ]+ Header[routeId][2];
 	}
@@ -73,9 +73,9 @@ function make_GPXtxt(routeId){
 	return WriteTxt;
 }
 // 最小サイズgpx txt作成
-function make_GPXtxtSimple(routeId){
+function make_GPXtxtSimple( routeId, formSel = "1" ){
 	let WriteTxt = Header[routeId][0];
-	if ( Bttn1Value() === "1" ){ WriteTxt += Header[routeId][1]; }
+	if ( formSel === "1" ){ WriteTxt += Header[routeId][1]; }
 	for (let i = 0; i < RouteList[routeId][1]; i++ ){ 
 		WriteTxt += Track[routeId][ i ] + rmvAddInfo( TrksegTxt[routeId][ i ] ) + Header[routeId][2];
 	}
