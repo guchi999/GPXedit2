@@ -7,6 +7,7 @@ DrwMap();
 // //////////////// ファイル入力 //////////////////
 // ドラッグ&ドロップ
 const dropArea = document.body; // 許可する領域
+
 dropArea.addEventListener("dragover", event => {
 	event.preventDefault();
 	event.dataTransfer.dropEffect = "copy";
@@ -693,14 +694,15 @@ function place_wptMark( routeId ){
 		let mkName = "m" + markN;
 		let PT = wptArr[ i ].indexOf(  'lat="' );
 		if ( PT != -1 ){
+			let Wname = "", Wcmt = "", Wdesc = "";
 			let lat = wptArr[ i ].substring( PT + 5, wptArr[ i ].indexOf( '"', PT +7 ) );
 			PT = wptArr[ i ].indexOf(  'lon="' );
 			let lon = wptArr[ i ].substring( PT + 5, wptArr[ i ].indexOf( '"', PT +7 ) );
 			let PointMark = L.marker([ lat, lon ], {title:mkName }).on('click', MarkerClick).on('contextmenu', MarkerClickRt).addTo(mymap);
 			LmarkerList[mkName] =  PointMark;
-			let Wname = wptArr[ i ].substring( wptArr[ i ].indexOf( '<name>' ) + 6, wptArr[ i ].indexOf( '</name>' ) );
-			let Wcmt = wptArr[ i ].substring( wptArr[ i ].indexOf( '<cmt>' ) + 5, wptArr[ i ].indexOf( '</cmt>' ) );
-			let Wdesc = wptArr[ i ].substring( wptArr[ i ].indexOf( '<desc>' ) + 6, wptArr[ i ].indexOf( '</desc>' ) );
+			Wname = wptArr[ i ].substring( wptArr[ i ].indexOf( '<name>' ) + 6, wptArr[ i ].indexOf( '</name>' ) );
+			if ( wptArr[ i ].indexOf( '<cmt>' ) != -1 ){ Wcmt = wptArr[ i ].substring( wptArr[ i ].indexOf( '<cmt>' ) + 5, wptArr[ i ].indexOf( '</cmt>' ) ); }
+			if ( wptArr[ i ].indexOf( '<desc>' ) != -1 ){ Wdesc = wptArr[ i ].substring( wptArr[ i ].indexOf( '<desc>' ) + 6, wptArr[ i ].indexOf( '</desc>' ) ); }
 			LmarkerIndex[ String( i + 1) ] = [ mkName, lat, lon, Wname, Wcmt, Wdesc ]
 			markN++;
 		}
