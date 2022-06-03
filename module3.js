@@ -860,10 +860,11 @@ function make_wptArr( routeId ){
 				let lat = Tmp[ i ].substring( PT + 5, Tmp[ i ].indexOf( '"', PT +7 ) );
 				PT = Tmp[ i ].indexOf(  'lon="' );
 				let lon = Tmp[ i ].substring( PT + 5, Tmp[ i ].indexOf( '"', PT +7 ) );
-				let Wname = Tmp[ i ].substring( Tmp[ i ].indexOf( '<name>' ) + 6, Tmp[ i ].indexOf( '</name>' ) );
-				let Wcmt = Tmp[ i ].substring( Tmp[ i ].indexOf( '<cmt>' ) + 5, Tmp[ i ].indexOf( '</cmt>' ) );
-				let Wdesc = Tmp[ i ].substring( Tmp[ i ].indexOf( '<desc>' ) + 6, Tmp[ i ].indexOf( '</desc>' ) );
-				wptArr.push( [ lat, lon, Wname,  Wcmt, Wdesc] );
+				let Wname = "", Wcmt = "", Wdesc = "";
+				Wname = Tmp[ i ].substring( Tmp[ i ].indexOf( '<name>' ) + 6, Tmp[ i ].indexOf( '</name>' ) );
+				if ( Tmp[ i ].indexOf( '<cmt>' ) != -1 ){ Wcmt = Tmp[ i ].substring( Tmp[ i ].indexOf( '<cmt>' ) + 5, Tmp[ i ].indexOf( '</cmt>' ) ); }
+				if ( Tmp[ i ].indexOf( '<desc>' ) != -1 ){ Wdesc = Tmp[ i ].substring( Tmp[ i ].indexOf( '<desc>' ) + 6, Tmp[ i ].indexOf( '</desc>' ) ); }
+				wptArr.push( [ lat, lon, Wname, Wcmt, Wdesc ] );
 			}
 		}
 	}
