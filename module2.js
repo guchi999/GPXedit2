@@ -494,7 +494,7 @@ async function get_tile( tileX,  tileY ){
 }
 
 
-// ダウンロード済みタイルからlat, lonの座標の標高値を得る。戻り値は標高(数値)
+// ダウンロード済みタイルからlat, lon座標の標高値を得る。戻り値は標高(数値)
 function get_Ele( lat, lon ){
 	let tileInfo = latLon2tile( lat, lon, 15 );
 	let tileKey = `${15}/${tileInfo[0]}/${tileInfo[1]}`;
@@ -571,7 +571,7 @@ function get_DiSr(lat1, lon1, lat2, lon2, ele1, ele2 ){
 }
 
 
-// //////////////// 作業モード選択設定 //////////////////
+// //////////////// 作業モード別の選択設定 //////////////////
 // ---------- track line クリック時のモード別動作 ----------
 function trkLine_crkOpe( routeId, trckNumber, NpInfo ){
 	switch (mode){
