@@ -245,7 +245,7 @@ function patial_remove(){
 	modeChange();
 }
 
-// 分割点の前までの trksegArr(TrksegTxT), trkNaArr(Track) をカットする
+// 分割点の前まで trksegArr(TrksegTxT), trkNaArr(Track) をカットする
 function cut_pre( trksegArr, trkNaArr, numbOfTrack, Mark ){
 	let trkseg = [], track = [];
 	for ( let i = 0; i < numbOfTrack; i++ ){
@@ -596,6 +596,7 @@ function ele_replace(){
 		eleTxt_change( routeId );
 	}());
 }
+// trksegTxtの<ele>~</ele>をeleTileの値に置き換え
 function eleTxt_change( routeId ){
 	for ( let i = 0; i < RouteList[ routeId ][1]; i++ ){
 		let PT = 0, trkpt = [], segTxtNew = "";
@@ -823,6 +824,7 @@ function fix_edit(){
 			PT++;
 		}
 	}
+	if ( trksegTimeChk( routeId )[0] != 1 ){ // 時間データ無しは時間変更をスキップ V2.02
 	 for ( let i = 0; i < TcList.length; i++ ){ // 時間変更
 	 	let startTime = TcList[ i ].substring( TcList[ i ].indexOf("<time>") + 6, TcList[ i ].indexOf("</time>") );
 	 	let endTime = TcList[ i ].substring( TcList[ i ].lastIndexOf("<time>") + 6, TcList[ i ].lastIndexOf("</time>") );
@@ -834,6 +836,7 @@ function fix_edit(){
 		pstChg = pstChg.substring( 0, pstChg.indexOf( endLine ) );
 		chgTxt = chgTxt.substring( 0, chgTxt.indexOf( topLine ) ) + pstChg + chgTxt.substring( chgTxt.indexOf( endLine ) );
 	 }
+	}
 	TrksegTxt[ routeId ][ EditRtTr[ routeId ][0] -1 ] = preTxt + chgTxt + pstTxt;
 	let wptTxt = ""; // ヘッダのwptを書き換え
 	for ( let i = 0; i < wptArr.length; i++){
