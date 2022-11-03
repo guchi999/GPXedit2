@@ -263,25 +263,25 @@ function modeChange(){
 			addBttnForm("OParea3", "divide_route()", "マーカー位置でルートを分割：", "確定" );
 			break;
 		case "remove":
-			addRadioForm( "OParea1", 1, "selbttn2", [ "始点からマーカーまで削除", "マーカー間を削除", "マーカー間を残す", "マーカーから終点まで削除" ]);
+			addRadioForm("OParea1", 1, "selbttn2", [ "始点からマーカーまで削除", "マーカー間を削除", "マーカー間を残す", "マーカーから終点まで削除" ]);
 			addBttnForm("OParea2", "patial_remove()", "ルートの部分削除：", "確定" );
 			break;
 		case "merge":
-			addRadioForm( "OParea1", 0, "selbttn2" , [ "トラックを統合して結合", "トラックを時系列で結合" , "トラックの単純接続"]);
-			addInputForm("OParea2", "trk1", "結合後のルート名：", "結合ファイル名" );
-			addRadioForm( "OParea3", 0, "selbttn3" , [ "ルート1のヘッダを使用", "ルート2のヘッダを使用" ]);
+			addRadioForm("OParea1", 0, "selbttn2" , [ "トラックを統合して結合", "トラックを時系列で結合" , "トラックの単純接続"]);
+			addInputForm("OParea2", "trk1", "結合後のルート名：", "" );
+			addRadioForm("OParea3", 0, "selbttn3" , [ "ルート1のヘッダを使用", "ルート2のヘッダを使用" ]);
 			addBttnForm("OParea4", "exec_merge()", "選択ルートを結合：", "確定" );
 			break;
 		case "edit":
 			addBttnForm("OParea1", "fix_edit()", "編集トラックを確定してルートに反映：", "確定" );
 			break;
 		case "decimate":
-			addInputForm("OParea1", "interval", "間引き間隔(m )：", "10" );
+			addInputForm("OParea1", "interval", "間引き間隔(m )：", "10", "6" );
 			addBttnForm("OParea2", "exec_decimate()", "ポイントを間引く：", "実行" );
 			break;
 		case "TmChang":
-			addRadioForm( "OParea1", 0, "selbttn2" , [ "時間変更", "時間シフト" ]);
-			addRadioForm( "OParea2", 0, "selbttn3" , [ "ルート全体", "指定トラックのみ" ]);
+			addRadioForm("OParea1", 0, "selbttn2" , [ "時間変更", "時間シフト" ]);
+			addRadioForm("OParea2", 0, "selbttn3" , [ "ルート全体", "指定トラックのみ" ]);
 			addDateForm("OParea3", "SetTime" );
 			addBttnForm("OParea4", "change_time()", "選択ルートの時間を変更：", "変更" );
 			break;
@@ -297,20 +297,23 @@ function modeChange(){
 			break;
 		case "save":
 			addInputForm("OParea1", "trk1", "保存するファイル名：", "" );
-			addRadioForm( "OParea2", 0, "selbttn2" , [ "元ファイル形式", "最小サイズ",  "元ファイル形式(wpt無)", "最小サイズ(wpt無)"]);
+			addRadioForm("OParea2", 0, "selbttn2" , [ "元ファイル形式", "最小サイズ",  "元ファイル形式(wpt無)", "最小サイズ(wpt無)"]);
 			addSaveLink("OParea3");
 			break;
-		case "Pinfo":
+		case "Pinfo": // V2.1 標高入力の追加, 実行ルーチンの名前変更
 			 addOneTimeForm("OParea1", "ChgTime" );
-			 addBttnForm( "OParea2", "chg_pointTime()", "", "変更" );
+			 addInputForm("OParea2", "ChgEle", "ポイントの標高 (ｍ)：", "" , "8");
+			 addBttnForm("OParea3", "chg_pointTimeEle()", "", "時間/標高の変更確定" );
 			break;
 		case "jump":
 			let PlaceArr = [];
 			for ( let i = 0; i < jumpList.length; i++ ){ PlaceArr.push( jumpList[ i ].split("/")[0] ); }
-			addRadioForm( "OParea1", -1 , "selbttn2", PlaceArr, "junp_select()" );
+			addRadioForm("OParea1", -1 , "selbttn2", PlaceArr, "junp_select()" );
 			break;
-		case "EleRepl":
+		case "EleRepl": // V2.1 代替標高入力の追加
 			addBttnForm("OParea1", "ele_replace()", "標高データを地理院地図の標高に置き換える：", "実行" );
+			addRadioForm("OParea2", 0 , "selbttn2" , [ "地理院地図に標高データが無い場所は代替値にする", "しない"]);
+			addInputForm("OParea3", "repEle", "標高代替値(m )：", "0", "8" );
 			break;
 		case "wptEdit":
 			addInputForm("OParea1", "trk1", "名前　　：", "" );
@@ -338,7 +341,7 @@ function addBttnForm( location, funcN, txt1, txt2){
 }
 
 // インプットボックス(txt)生成
-function addInputForm( location, idNam, txt1, txt2){
+function addInputForm( location, idNam, txt1, txt2, size = "40"){
 	let place = document.getElementById( location );
 	let LAB = document.createElement("label");
 	LAB.setAttribute("for", idNam);
@@ -347,8 +350,8 @@ function addInputForm( location, idNam, txt1, txt2){
 	let compo = document.createElement("input");
 	compo.setAttribute("type","text");
 	compo.setAttribute("id", idNam);
-	compo.setAttribute("maxlength","40"); 
-	compo.setAttribute("size","30"); 
+	compo.setAttribute("maxlength", "40"); 
+	compo.setAttribute("size", size); 
 	compo.setAttribute("value",txt2);
 	place.appendChild( compo );
 }
@@ -406,12 +409,12 @@ function addDateForm( location, idNam ){
 	place.appendChild( compo );
 }
 
-//  インプットボックス(time)生成
+//  ポイント情報インプットボックス(time)生成
 function addOneTimeForm( location, idNam ){
 	let place = document.getElementById( location );
 	LAB = document.createElement("label");
 	LAB.setAttribute("for", idNam);
-	LabeTxt = document.createTextNode( "ポイント時間変更：" );
+	LabeTxt = document.createTextNode( "ポイントの時間：" );
 	LAB.appendChild(LabeTxt);
 	place.appendChild( LAB );
 	compo = document.createElement("input");
