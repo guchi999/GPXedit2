@@ -7,7 +7,6 @@ DrwMap();
 // //////////////// ファイル入力 //////////////////
 // ドラッグ&ドロップ
 const dropArea = document.body; // 許可する領域
-
 dropArea.addEventListener("dragover", event => {
 	event.preventDefault();
 	event.dataTransfer.dropEffect = "copy";
@@ -212,7 +211,7 @@ function kml_inport( txtStr, routeName  ){
 		trkTxt += `<trk><name>${trkName}</name><trkseg>\n`;
 		for ( let j = 0; j < trkptArr.length; j++ ){
 			trkTxt += `<trkpt lat="${trkptArr[ j ][1]}" lon="${trkptArr[ j ][0]}">`;
-			trkTxt += `<ele>${trkptArr[ j ][1]}</ele></trkpt>\n`
+			trkTxt += `<ele>${trkptArr[ j ][2]}</ele></trkpt>\n`
 		}
 		trkTxt += "</trkseg></trk>\n";
 	}
@@ -571,7 +570,7 @@ function get_DiSr(lat1, lon1, lat2, lon2, ele1, ele2 ){
 }
 
 
-// //////////////// 作業モード別の選択設定 //////////////////
+// //////////////// 各作業モードでのtrack選択時の設定 //////////////////
 // ---------- track line クリック時のモード別動作 ----------
 function trkLine_crkOpe( routeId, trckNumber, NpInfo ){
 	switch (mode){
@@ -756,7 +755,7 @@ function replace_wptTxt(){
 	WrtMessage1( `選択ルート：${RouteList[routeId][0]}、 ウェイポイント数：${RouteList[routeId][2]}` );
 }
 
-// ---------- 選択ルートの編集画面への情報表示 ----------
+// ---------- 選択ルート編集画面への情報表示 ----------
 function dsp_routeInfo( routeId, trckNumber, NpInfo ){
 	let PT = 0, TrackTxt = "";
 	switch (mode){
@@ -768,7 +767,7 @@ function dsp_routeInfo( routeId, trckNumber, NpInfo ){
 		case "remove":
 			WrtMessage1( `選択ルート：${RouteList[routeId][0]}` );
 			break;
-		case "Pinfo":
+		case "Pinfo":  // V2.1 時間/標高は入力欄に表示、ルート情報は日付のみに変更
 			let lat = NpInfo[0][0], lon = NpInfo[0][1];
 			TrackTxt = TrksegTxt[routeId][ trckNumber -1 ];
 			PT = 0, idx = -1, tesP ={};
@@ -777,25 +776,27 @@ function dsp_routeInfo( routeId, trckNumber, NpInfo ){
 				idx++;
 				PT = tesP[0] +1;
 			}
-			let ele = tesP[3], Ptime = tesP[4], PtimeStr = "", PtimeStrD;
+			let ele = "";
+			if ( tesP[5].indexOf("<ele>") != -1 ) { ele = tesP[5].substring( tesP[5].indexOf("<ele>") +5,  tesP[5].indexOf("</ele>") ); } 
+			let Ptime = tesP[4], PtimeStr = "", PtimeStrD;
 			if ( Ptime != ""){
 				let PtimeObj = new Date( Ptime );
-				PtimeStr =  PtimeObj.toLocaleString(); PtimeStrD = PtimeStr
+				PtimeStr =  PtimeObj.toLocaleString(); PtimeStrD = PtimeStr.split(" ")[0];
 				PtimeStr =  PtimeStr.split(" ")[1];
 				PtimeStrSpl = PtimeStr.split(":");
 				if (PtimeStrSpl[0].length === 1){ PtimeStrSpl[0] = "0" + PtimeStrSpl[0]; }
-				PtimeStr =  PtimeStrSpl[0] + ":" + PtimeStrSpl[1];
+				PtimeStr =  PtimeStrSpl[0] + ":" + PtimeStrSpl[1] + ":" + PtimeStrSpl[2];
 				document.getElementById("ChgTime").value = PtimeStr;
 			}else{
-				PtimeStr = "--:--";
 				document.getElementById("ChgTime").value = "";
 			}
-			( Number.isNaN(ele) ) ? eleTxt = "--": eleTxt = String( ele);
+ 			( Number.isNaN(ele) ) ? eleTxt = "": eleTxt = String( ele );
+			document.getElementById("ChgEle").value = eleTxt;
 			let trkNN = Track[routeId][trckNumber -1 ], NN1 = "", NN2 = "";
 			( trkNN.indexOf("<name>") != -1 ) ?  NN1 = trkNN.substring( trkNN.indexOf("<name>") + 6, trkNN.indexOf("</name>") ): NN1 = "";
 			( trkNN.indexOf("<number>") != -1 ) ?  NN2 = trkNN.substring( trkNN.indexOf("<number>") + 8, trkNN.indexOf("</number>") ): NN2 = "";
-			WrtMessage1( `<font color="black">ルート[<b>${RouteList[routeId][0]}</b>]トラック[<b>${NN1}</b>]number[<b>${NN2}</b>]  時間[<b>${PtimeStrD}</b>]</font>` );
-			WrtMessage2( `<b>N</b>${lat} <b>E</b>${lon}、 標高${eleTxt}m、 index[${NpInfo[2]}]` );
+			WrtMessage1( `<font color="black">ルート名[<b>${RouteList[routeId][0]}</b>]トラック名[<b>${NN1}</b>]number[<b>${NN2}</b>] 日付[<b>${PtimeStrD}</b>]</font>` );
+			WrtMessage2( `<b>N</b>${lat} <b>E</b>${lon}、index[${NpInfo[2]}]` );
 			break;
 		case "edit":
 			 let NumOfTrackPoit = strCount(TrksegTxt[routeId][ trckNumber -1 ], "</trkpt>");
