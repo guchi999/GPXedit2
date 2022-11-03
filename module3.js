@@ -319,22 +319,62 @@ function make_reverseRoute(){
 }
 
 
-// "Pinfo" trkptポイントの時間変更(Pinfoで示した1点)
-function chg_pointTime(){
-	let newTimeTxt = GetDoc("ChgTime");
-	if ( newTimeTxt === ""){ return; }
+// "Pinfo" Pinfoで示したtrkptポイント(1点)の時間と標高の変更  (V2.1 標高入力の追加、関数名変更)
+function chg_pointTimeEle(){
 	let routeId = DevideMark["0"].route, trackNum = DevideMark["0"].track -1, trkptIndex = DevideMark["0"].indx;
 	let trksegTxt = TrksegTxt[ routeId ][ trackNum];
 	let trksegTxtNew = spl_trkseg( trksegTxt, trkptIndex );
-	if ( trksegTxt.indexOf("<time>") === -1 ){ alert( "ルートに時間データがありません。\n時間変更で設定してください。" ); return; }
-	let CurTime = trksegTxtNew[1].substring( trksegTxtNew[1].indexOf("<time>") + 6, trksegTxtNew[1].indexOf("</time>") )
-	let CTobj = new Date( CurTime.split("T")[0] + " " + newTimeTxt );
-	newTimeTxt = CTobj.toISOString().split('.')[0] + "Z";
-	let T1 = trksegTxtNew[1].substring( 0, trksegTxtNew[1].indexOf("<time>") + 6 );
-	let T2 = trksegTxtNew[1].substring( trksegTxtNew[1].indexOf("</time>") ) ;
-	trksegTxtNew[1] = T1 + newTimeTxt + T2;
-	TrksegTxt[ routeId ][ trackNum] = trksegTxtNew[0] + trksegTxtNew[1];
-	modeChange();
+	let trkptTxt = trkptTxtNew = trksegTxtNew[1].substring( 0, trksegTxtNew[1].indexOf("</trkpt>") + 8 );
+	let EleTxtNew = GetDoc("ChgEle"), TimeTxtNew = GetDoc("ChgTime"), TimeTxt, EleTxt;
+	if ( EleTxtNew != "" ){
+		if ( !isNaN(EleTxtNew) ){ // 数値以外の入力をisNaNでチェック
+			let EleTxtRep = "<ele>" + EleTxtNew + "</ele>";
+			if ( trkptTxt.indexOf("<ele>") != -1 ){
+				EleTxt = trkptTxt.substring( trkptTxt.indexOf("<ele>"),  trkptTxt.indexOf("</ele>") + 6 );
+				if ( EleTxt != EleTxtRep ) trkptTxtNew = trkptTxt.replace( EleTxt, EleTxtRep );
+			}else{
+				let sep = trkptTxt.indexOf(">");
+				trkptTxtNew = trkptTxt.substring( 0, sep + 1 ) + EleTxtRep + trkptTxt.substring( sep + 1 );
+			}
+		}else{
+			document.getElementById("ChgEle").select();
+			return;
+		}
+	}else{
+		if ( trkptTxt.indexOf("<ele>") != -1 ){
+			EleTxt = trkptTxt.substring( trkptTxt.indexOf("<ele>") +5,  trkptTxt.indexOf("</ele>") );
+			trkptTxtNew = trkptTxt.replace( EleTxt, EleTxtNew );
+		}
+	}
+	let noTimeFlg = 0;
+	if ( TimeTxtNew != "" ){
+		if ( trkptTxtNew.indexOf("<time>") != -1 ){
+			TimeTxt = trkptTxtNew.substring( trkptTxtNew.indexOf("<time>") +6,  trkptTxtNew.indexOf("</time>") );
+			if ( TimeTxt !="" ){
+				let dateTxt = new Date( TimeTxt ).toLocaleDateString();
+				let TvalTxt = new Date( TimeTxt ).toLocaleTimeString()  
+				if ( TimeTxtNew[0] === "0" ){ TimeTxtNew = TimeTxtNew.slice(1); }
+				if ( TimeTxtNew != TvalTxt ){
+					let repTimeTxt =new Date( dateTxt + " " + TimeTxtNew ).toISOString();
+					if ( TimeTxt.indexOf( "." ) === -1 ){ repTimeTxt = repTimeTxt.split( "." )[0] + "Z"; }
+					trkptTxtNew = trkptTxtNew.replace( TimeTxt, repTimeTxt );
+				}
+			}else{
+				noTimeFlg = 1;
+			}
+		}else{
+			noTimeFlg = 1;
+		}
+		if ( noTimeFlg != 0){
+			alert( "ルートに日付と時間のデータがありません。\作業モード時間変更で設定してください。" );
+			document.getElementById("ChgTime").value = "";
+			document.getElementById("ChgEle").value = EleTxtNew;
+			if ( trkptTxt != trkptTxtNew ) { TrksegTxt[ routeId ][ trackNum] = TrksegTxt[ routeId ][ trackNum].replace( trkptTxt, trkptTxtNew ); }
+			return;
+		}
+	}
+	if ( trkptTxt != trkptTxtNew ) { TrksegTxt[ routeId ][ trackNum] = TrksegTxt[ routeId ][ trackNum].replace( trkptTxt, trkptTxtNew ); }
+	return;
 }
 
 
@@ -527,7 +567,7 @@ function exec_merge(){
 		}
 	}else if ( Bttn1Value() === "2" ){ // トラックの単純接続 
 		for ( let i = 0; i < RouteList[ routeId1 ][1] ; i++ ){
-				trkSegArr.push( TrksegTxt[routeId1][ i ] );	trackNamArr.push ( Track[ routeId1 ][ i ] );
+			trkSegArr.push( TrksegTxt[routeId1][ i ] );	trackNamArr.push ( Track[ routeId1 ][ i ] );
 		}
 		for ( let i = 0; i < RouteList[ routeId2 ][1] ; i++ ){
 			trkSegArr.push( TrksegTxt[routeId2][ i ] );	trackNamArr.push ( Track[ routeId2 ][ i ] );
@@ -596,15 +636,18 @@ function ele_replace(){
 		eleTxt_change( routeId );
 	}());
 }
-// trksegTxtの<ele>~</ele>をeleTileの値に置き換え
+// trksegTxtの<ele>~</ele>をeleTileの値に置き換え (V2.1 標高代替値を追加)
 function eleTxt_change( routeId ){
 	for ( let i = 0; i < RouteList[ routeId ][1]; i++ ){
 		let PT = 0, trkpt = [], segTxtNew = "";
 		while ( PT != -1 ){
 			trkpt =  get_trkptDat( TrksegTxt[routeId][ i ], PT );
 			PT = trkpt[0];
-			if (  PT != -1){ // ダウンロード済みタイルからlat, lonの標高値を得て<ele>～</ele>を書換
+			if (  PT != -1){ // ダウンロード済みタイルからlat, lon座標の標高値を得て<ele>～</ele>を書換
 				let eleTxt = "<ele>" + String( get_Ele( trkpt[1], trkpt[2] ) ) + "</ele>"; 
+				if ( eleTxt.indexOf( "NaN") != -1){ // V2.1
+					( Bttn1Value() === "0" ) ? eleTxt = "<ele>" + GetDoc("repEle") + "</ele>":  eleTxt = "<ele></ele>";
+				}
 				( trkpt[5].indexOf("<ele>") != -1 ) ? 
 					segTxtNew += trkpt[5].split("<ele>")[0] + eleTxt + trkpt[5].split("</ele>")[1]:
 					segTxtNew += trkpt[5].substring( 0, trkpt[5].indexOf(">") + 1 ) + eleTxt + trkpt[5].substring( trkpt[5].indexOf(">") + 1 );
